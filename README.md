@@ -28,6 +28,8 @@ This is not meant to be a cache of all the data on MAL, it only lists IDs and wh
 
 This will be updated whenever a new entry is added.
 
+If you want to generate a cache of manga id's, you can change [this line](https://github.com/seanbreckenridge/mal-id-cache/blob/409772c997103e53c98a612892297833377cb58d/generate.py#L97) to `manga` instead of `anime`
+
 ##### Implementation Notes
 
 This checks ranges of the Just Added page periodically, ordered by most recent ID
