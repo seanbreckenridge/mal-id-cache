@@ -186,7 +186,7 @@ def loop():
         current_page = 1
         result_count = 1
         # while we're under our page range and we havent checked every page
-        # check 1/2th of normal page range since NSFW entries are less common
+        # check 1/2 of normal page range since NSFW entries are less common
         page_range = req_type.val / 2
         while current_page <= page_range and result_count > 0:
 
