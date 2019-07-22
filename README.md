@@ -61,9 +61,7 @@ Start the server: `php -S localhost:8000 -t jikan-rest/public >> logs/jikan-requ
 
 `pipenv shell` to enter the virtualenv
 
-Initialize the cache (only required if you deleted `cache.json`): `python3 generate.py init`
-
-Keep the cache updated: `python3 generate.py run`
+Generate and keep the cache updated: `python3 generate.py run`
 
 If you're trying to debug, you can modify the jikan requests last in cache by modifying the `CACHE_EXPIRE` variables in [env.dist](./env.dist), or delete the cache for `jikan-rest` by doing:
 
