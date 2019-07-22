@@ -102,7 +102,6 @@ def get_search_page(p, nsfw):
             'genre_exclude': 1 if nsfw else 0,
             'order_by': 'id',
             'sort': 'desc'})
-    # time.sleep(1) # default wait
     return resp
 
 
