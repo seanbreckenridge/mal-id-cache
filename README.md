@@ -28,7 +28,7 @@ This is not meant to be a cache of all the data on MAL, it only lists IDs and wh
 
 This will be updated whenever a new entry is added.
 
-If you want to generate a cache of manga id's, you can change [this line](https://github.com/seanbreckenridge/mal-id-cache/blob/409772c997103e53c98a612892297833377cb58d/generate.py#L97) to `manga` instead of `anime`
+Since Github doesn't allow you to serve large files without an authenticated token, the easiest way to download this and keep it updated is to `git clone https://github.com/seanbreckenridge/mal-id-cache` and have a script that `git pull`s periodically.
 
 ##### Implementation Notes
 
@@ -66,3 +66,8 @@ Generate and keep the cache updated: `python3 generate.py run`
 If you're trying to debug, you can modify the jikan requests last in cache by modifying the `CACHE_EXPIRE` variables in [env.dist](./env.dist), or delete the cache for `jikan-rest` by doing:
 
 `rm -rf jikan-rest/storage/framework/cache/*`
+
+
+#### Manga Cache
+
+I'm currently not maintaining a cache of manga id's, since there are a lot more and its a less common problem. However, if you want to generate a cache of manga id's, you can change [this line](https://github.com/seanbreckenridge/mal-id-cache/blob/409772c997103e53c98a612892297833377cb58d/generate.py#L97) to `manga` instead of `anime`, and change the name of the file [here](https://github.com/seanbreckenridge/mal-id-cache/blob/f6078957cae9452bebcf6f1163465562e1695429/generate.py#L21) to something like `manga_cache.json`.
