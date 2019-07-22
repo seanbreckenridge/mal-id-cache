@@ -239,6 +239,8 @@ def loop():
         db.lsort('sfw')
         db.lsort('nsfw')
 
+        commit()
+
         sleep_for = int(60 * random.uniform(27, 35))
         logger.debug("Sleeping for {}m{}s".format(*divmod(sleep_for, 60)))
         time.sleep(sleep_for)  # sleep for around 30 minutes
@@ -247,13 +249,13 @@ def loop():
 def commit():
     repo = Repo(root_dir)
     if 'cache.json' in [i.a_path for i in repo.index.diff(None)]:
-        logger.debug("cache.json has been changed, commiting files and pushing")
+        logger.debug("[git] cache.json has been changed, commiting files and pushing")
         repo.git.add('cache.json')
         repo.index.commit("cache.json update")
         origin = repo.remote(name='origin')
         origin.push()
     else:
-        logger.debug("cache.json is unchanged")
+        logger.debug("[git] cache.json is unchanged")
 
 if __name__ == "__main__":
     cli()
