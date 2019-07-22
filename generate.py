@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import math
 import time
 import random
 import json
@@ -51,9 +50,6 @@ class IndentedPickleDB(pickledb.PickleDB):
 
 db = IndentedPickleDB(location=db_file, auto_dump=False, sig=True)
 
-# there are less nsfw entries so we dont need to check as many pages
-nsfw_div_factor = 3
-
 
 class req_range:
     """Since we extend whenever we find an entry, these aren't incredibly important
@@ -76,7 +72,7 @@ class req_range:
 
     class all:
         val = "all"
-        time = 60 * 30 * 24 * 15 # 15 days
+        time = 60 * 30 * 24 * 15  # 15 days
         last = 0
 
 
@@ -123,7 +119,7 @@ def update_req_range(found_new_entries: bool,
                 "[{}]Extending search from {} to {}".format(
                     "NSFW" if is_nsfw else "SFW",
                     page_range_before_extend,
-                    math.ceil(page_range / nsfw_div_factor) if is_nsfw else page_range))
+                    page_range))
     return page_range
 
 
@@ -152,7 +148,7 @@ def add_from_page(type, page):
 def loop():
 
     for type in ['sfw', 'nsfw']:
-        if db.get(type) == False:
+        if db.get(type) is False:
             db.lcreate(type)
 
     while True:
@@ -185,21 +181,20 @@ def loop():
             db.db['nsfw'] = []
             db.dump()
             req_type = req_range.twenty
-            page_range = req_type.val # will extend past this since we'll find new entries
 
         # Check NSFW
         current_page = 1
         result_count = 1
         # while we're under our page range and we havent checked every page
-        # check 1/3th of normal page range since NSFW entries are less common
-        while current_page <= math.ceil(
-                page_range / nsfw_div_factor) and result_count > 0:
+        # check 1/2th of normal page range since NSFW entries are less common
+        page_range = req_type.val / 2
+        while current_page <= page_range and result_count > 0:
 
             logger.debug(f"[loop][NSFW] checking page {current_page}")
             result_count, found_new_entries = add_from_page(
                 'nsfw', current_page)
-            page_range = update_req_range(found_new_entries, current_page, math.ceil(
-                page_range / nsfw_div_factor), is_nsfw=True)
+            page_range = update_req_range(
+                found_new_entries, current_page, page_range, is_nsfw=True)
             current_page += 1
 
         # Check SFW
@@ -216,7 +211,10 @@ def loop():
             current_page += 1
 
         # will only write req_range for sfw
-        last_scraped = [req_range.eight.last, req_range.twenty.last, req_range.all.last]
+        last_scraped = [
+            req_range.eight.last,
+            req_range.twenty.last,
+            req_range.all.last]
 
         # at the time of writing this, there are 293 SFW pages
         # its incredibly unlikely any approved entries will apear after page 250
@@ -248,13 +246,15 @@ def loop():
 def commit():
     repo = Repo(root_dir)
     if 'cache.json' in [i.a_path for i in repo.index.diff(None)]:
-        logger.debug("[git] cache.json has been changed, commiting files and pushing")
+        logger.debug(
+            "[git] cache.json has been changed, commiting files and pushing")
         repo.git.add('cache.json')
         repo.index.commit("cache.json update")
         origin = repo.remote(name='origin')
         origin.push()
     else:
         logger.debug("[git] cache.json is unchanged")
+
 
 if __name__ == "__main__":
     cli()
