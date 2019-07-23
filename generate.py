@@ -76,18 +76,16 @@ class req_range:
         last = 0
 
 
-def backoff_hdlr(details):
-    logger.debug("Backing off {wait:0.1f} seconds afters {tries} tries " +
-                 "calling function {target} for with args {args} and kwargs " +
-                 "{kwargs}".format(**details))
+def _hdlr(details):
+    logger.debug("Backing off {wait:0.1f} seconds afters {tries} tries with {args} {kwargs}".format(**details))
 
 
 @backoff.on_exception(
-    backoff.fibo,  # fibonacci sequence backoff
+    backoff.expo,  # exponential backoff
     (jikanpy.exceptions.JikanException,
      jikanpy.exceptions.APIException),
     max_tries=10,
-    on_backoff=backoff_hdlr)
+    on_backoff=lambda details: _hldr(details))
 def get_search_page(p, nsfw):
     resp = j.search(
         'anime',
