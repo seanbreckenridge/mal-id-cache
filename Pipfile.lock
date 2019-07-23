@@ -125,7 +125,7 @@
         "jikanpy": {
             "editable": true,
             "git": "https://github.com/AWConant/jikanpy",
-            "ref": "ab5c2eee262fde3b4d68b4a6824dbacce82e64fe"
+            "ref": "b86188889dbbd2b0e520db9bf60d717c041e29c9"
         },
         "multidict": {
             "hashes": [
