@@ -63,6 +63,8 @@ Start the server: `php -S localhost:8000 -t jikan-rest/public >> logs/jikan-requ
 
 Generate and keep the cache updated: `python3 generate.py run`
 
+Theres also a wrapper script, [run](./run), which will restart `python3 generate.py run` incase of network failure
+
 If you're trying to debug, you can modify how long the the jikan requests last in cache by modifying the `CACHE_EXPIRE` variables in [env.dist](./env.dist) (and jikan-rest/.env), or delete the cache for `jikan-rest` by doing:
 
 `rm -rf jikan-rest/storage/framework/cache/*`

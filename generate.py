@@ -84,8 +84,8 @@ def _hdlr(details):
     backoff.expo,  # exponential backoff
     (jikanpy.exceptions.JikanException,
      jikanpy.exceptions.APIException),
-    max_tries=10,
-    on_backoff=lambda details: _hldr(details))
+    max_tries=15,
+    on_backoff=lambda details: _hdlr(details))
 def get_search_page(p, nsfw):
     resp = j.search(
         'anime',
@@ -129,8 +129,13 @@ def add_from_page(type, page):
     """
     found_new_entries = False
     prev_cache = db.lgetall(type)
-    results = get_search_page(
-        page, nsfw=True if type == 'nsfw' else False)['results']
+    results = []
+    try:
+        results = get_search_page(
+            page, nsfw=True if type == 'nsfw' else False)['results']
+    except Exception as e:
+        logger.error(str(e), exc_info=True)
+        raise e
     for r in results:
         if r["mal_id"] not in prev_cache:
             found_new_entries = True
