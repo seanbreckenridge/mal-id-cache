@@ -36,7 +36,7 @@ This checks ranges of the Just Added page periodically, ordered by most recent I
 
 It checks the first 2 pages every ~30 minutes, the first 8 every 8 hours, the first 20 every 2 days and completely deletes and re-creates the cache every 15 days (incase entries are deleted or merged).
 
-If it finds an entry on any page, it extends how far it searches `(by 5 + (current_page / 5)`.
+If it finds an entry on any page, it extends how far it searches by `(5 + (current_page / 5)`.
 
 ### Installation
 
@@ -44,7 +44,7 @@ If for some reason, you'd like to set up your own instance:
 
 To setup the cache, we have to use a local [Jikan](https://github.com/jikan-me/jikan) instance since the remote one would cache requests for too long. See [here](https://github.com/jikan-me/jikan-rest) for how to set that up.
 
-After installing initial dependencies:
+After Finishing Step 1 on that page:
 
 ```
 git clone https://github.com/seanbreckenridge/mal-id-cache
