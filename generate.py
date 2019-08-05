@@ -62,17 +62,17 @@ class req_range:
 
     class eight:
         val = 8
-        time = 60 * 30 * 8  # 8 hours
+        time = 60 * 60 * 8  # 8 hours
         last = 0
 
     class twenty:
         val = 20
-        time = 60 * 30 * 24 * 2  # 2 days
+        time = 60 * 60 * 24 * 2  # 2 days
         last = 0
 
     class all:
         val = "all"
-        time = 60 * 30 * 24 * 15  # 15 days
+        time = 60 * 60 * 24 * 15  # 15 days
         last = 0
 
 
