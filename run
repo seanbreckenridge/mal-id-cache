@@ -4,5 +4,5 @@ while true
 do
     python3 generate.py run
     # wait for a while if we crash due to losing internet connection
-    ping -q -w1 -c1 google.com &>/dev/null && sleep 10 || sleep 600
+    ping -q -w1 -c1 google.com &>/dev/null && sleep 10 || sleep 30
 done
