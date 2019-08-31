@@ -19,6 +19,7 @@ logs_dir = os.path.join(root_dir, 'logs')
 if not os.path.exists(logs_dir):
     os.makedirs(logs_dir)
 db_file = os.path.join(root_dir, 'cache.json')
+state_file = os.path.join(root_dir, "state")
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -165,8 +166,8 @@ def loop():
 
         logger.debug("[loop] Checking state")
         # read times from 'state' file
-        if os.path.exists("state"):
-            with open("state", "r") as last_scraped:
+        if os.path.exists(state_file):
+            with open(state_file, "r") as last_scraped:
                 req_range.eight.last, req_range.twenty.last, req_range.all.last = list(
                     map(int, last_scraped.read().strip().splitlines()))
 
@@ -232,7 +233,7 @@ def loop():
         if page_range >= req_range.eight.val:
             last_scraped[0] = int(time.time())
 
-        with open('state', 'w') as state_f:
+        with open(state_file, 'w') as state_f:
             state_f.write("\n".join(map(str, last_scraped)))
 
         # sort id lists
