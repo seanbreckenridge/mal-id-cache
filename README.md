@@ -88,6 +88,33 @@ How you install python requirements is up to you, you can import it into a [`pip
 
 Start the jikan-rest server: `php -S localhost:8000 -t jikan-rest/public >> ~/.mal-id-cache/logs/jikan-requests.log 2>&1`
 
+Run the script:
+
+```
+Usage: mal_id_cache [OPTIONS]
+
+  Caches IDs for MyAnimeList
+
+Options:
+  --config-file PATH        Override the default .toml config file
+  --dry-run / --no-dry-run  Don't affect local files or make requests, log
+                            actions instead
+  --loop / --no-loop        Run the process till stopped, checking for new
+                            entries periodically
+  --server / --no-server    --loop, and open a socket (default port: 32287) to
+                            listen for requests from other processes
+  --init-dir                Make sure directories at ~/.mal-id-cache are setup
+                            properly and exit
+  --initialize              Initialize each cache -- deletes and re-requests
+                            everything.
+  --force-state INTEGER     Update all 'last checked' times for the state
+                            files to 'n' seconds ago
+  --delete                  Delete the cache and state files if they exist and
+                            exit
+  --help                    Show this message and exit.
+
+```
+
 #### Thanks
 
 Thanks to [lynn root/mayhem mandril](https://github.com/econchick/mayhem), for some asyncio best practices.
