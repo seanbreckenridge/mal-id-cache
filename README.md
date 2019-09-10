@@ -37,11 +37,11 @@ For person/character:
 
 The reason this exists is because there's currently no easy way to get a list of all the approved entries on MAL. 
 
-Whenever an entry requested to be added (by a user), it gets an ID and it "on the website" - unlisted; at this point no one can add it to their list.
+Whenever an entry requested to be added (by a user), it gets an ID and is listed "on the website" - unlisted; at this point no one can add it to their list.
  
 If a moderator approves the entry, it keeps the same ID and becomes an entry that people can view publicly.
 
-If its denied, the ID disappears and becomes a 404, leaving a 'gap' in the IDs for MAL. At the time of writing this, the most recently approved anime ID is 40134, but theres less than 17000 anime entries on MAL.
+If its denied, the ID disappears and becomes a 404, leaving a 'gap' in the IDs for MAL. At the time of writing this, the most recently approved anime ID is 40134, but there are less than 17000 anime entries on MAL.
 
 There have been a few cases where IDs are re-used for others, but that is not the common case.
 
