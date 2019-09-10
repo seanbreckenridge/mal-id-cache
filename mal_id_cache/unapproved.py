@@ -15,7 +15,7 @@ class Unapproved:
     Class to parse the unapproved entry page
     """
 
-    WAIT_TIME = 30
+    WAIT_TIME = 20
     ERR_WAIT_TIME = 120
     RELATION_ID_PAGE = "https://myanimelist.net/info.php?search=%25%25%25&go=relationids&divname=relationGen1"
     USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:68.0) Gecko/20100101 Firefox/68.0"
@@ -42,6 +42,7 @@ class Unapproved:
         else:
             self._html_response = await self.session.get(self.RELATION_ID_PAGE, headers={"User-Agent": self.USER_AGENT})
             self._html_response.raise_for_status()
+            await asyncio.sleep(self.WAIT_TIME)
             self._html_text = await self._html_response.text()
 
     async def _parse(self):
