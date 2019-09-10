@@ -33,11 +33,7 @@ async def backoff_handler(details):
 
 
 class UpdateableRange:
-    def __init__(
-        self,
-        check_till: int,
-        extend_by: Optional[int] = 5,
-    ):
+    def __init__(self, check_till: int, extend_by: Optional[int] = 5):
         """
         A generator that can be updated while iterating; returns integers that correspond
         to pages to check till we don't find a page in either:
@@ -69,7 +65,6 @@ class UpdateableRange:
         if check_till == -2:
             self.is_toggleable = True
 
-
     async def found_entry_on_page(self, n: int) -> None:
         """
         Updates the range when an entry is found on a page.
@@ -94,7 +89,11 @@ class UpdateableRange:
         return self
 
     def __next__(self) -> int:
-        if self.infinite or self.current_page < self.check_till or (self.is_toggleable and self._is_toggled):
+        if (
+            self.infinite
+            or self.current_page < self.check_till
+            or (self.is_toggleable and self._is_toggled)
+        ):
             self.current_page += 1
             return self.current_page
         else:

@@ -13,13 +13,7 @@ import toml
 from git import Repo
 
 from . import default_config_file, repo_dir, loop
-from .scheduler import (
-    AbstractScheduler,
-    AnimeScheduler,
-    MangaScheduler,
-    CharacterScheduler,
-    PersonScheduler,
-)
+from .scheduler import AbstractScheduler, JustAddedScheduler, AllPagesScheduler
 from .cache import AbstractCache, JustAddedCache, AllPagesCache
 from .logging import logger, asynclogger
 from .jobs import RequestType, Job
@@ -77,7 +71,6 @@ class Global:
         Global.set("manga_ranges", load_dictionary(default_conf["manga"]))
         Global.set("character_ranges", load_dictionary(default_conf["character"]))
         Global.set("person_ranges", load_dictionary(default_conf["person"]))
-
 
 
 def exception_handler(func: Callable, context: Dict) -> None:
@@ -178,29 +171,44 @@ async def graceful_shutdown(shutdown_signal: Optional[signal.Signals] = None) ->
     default=False,
     is_flag=True,
     required=False,
-    help="Initialize each cache -- deletes and re-requests everything."
+    help="Initialize each cache -- deletes and re-requests everything.",
 )
 @click.option(
     "--force-state",
-    'force_state',
+    "force_state",
     type=int,
     required=False,
     help="Update all 'last checked' times for the state files to 'n' seconds ago",
 )
 @click.option(
     "--delete",
-    'delete',
+    "delete",
     default=False,
     is_flag=True,
     required=False,
     help="Delete the cache and state files if they exist and exit",
 )
-def run_wrapper(config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete):
+def run_wrapper(
+    config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete
+):
     """Main click command wrapper"""
-    loop.run_until_complete(run(config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete))
+    loop.run_until_complete(
+        run(
+            config_file,
+            dry_run,
+            do_loop,
+            server,
+            init_dir,
+            initialize,
+            force_state,
+            delete,
+        )
+    )
 
 
-async def run(config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete):
+async def run(
+    config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete
+):
     """Check state and update cache, if needed"""
     global schedules
 
@@ -209,7 +217,6 @@ async def run(config_file, dry_run, do_loop, server, init_dir, initialize, force
         # Directories are initialized in __init__.py, exit
         await graceful_shutdown()
         sys.exit(0)
-
 
     # Load configuration
     Global.load_defaults(config_file, dry_run)
@@ -221,21 +228,30 @@ async def run(config_file, dry_run, do_loop, server, init_dir, initialize, force
     signals = (signal.SIGHUP, signal.SIGTERM, signal.SIGINT)
     for s in signals:
         loop.add_signal_handler(
-            s, lambda s=s: asyncio.create_task(graceful_shutdown(s)))
+            s, lambda s=s: asyncio.create_task(graceful_shutdown(s))
+        )
     loop.set_exception_handler(exception_handler)
 
     # Initialize Schedules
-    schedules[RequestType.ANIME] = AnimeScheduler(
-        request_ranges=Global.config("anime_ranges"), dry_run=dry_run
+    schedules[RequestType.ANIME]: JustAddedScheduler = JustAddedScheduler(
+        request_type=RequestType.ANIME,
+        request_ranges=Global.config("anime_ranges"),
+        dry_run=dry_run,
     )
-    schedules[RequestType.MANGA] = MangaScheduler(
-        request_ranges=Global.config("manga_ranges"), dry_run=dry_run
+    schedules[RequestType.MANGA]: JustAddedScheduler = JustAddedScheduler(
+        request_type=RequestType.MANGA,
+        request_ranges=Global.config("manga_ranges"),
+        dry_run=dry_run,
     )
-    schedules[RequestType.CHARACTER] = CharacterScheduler(
-        request_ranges=Global.config("character_ranges"), dry_run=dry_run
+    schedules[RequestType.CHARACTER]: AllPagesScheduler = AllPagesScheduler(
+        request_type=RequestType.CHARACTER,
+        request_ranges=Global.config("character_ranges"),
+        dry_run=dry_run,
     )
-    schedules[RequestType.PERSON]: PersonScheduler = PersonScheduler(
-        request_ranges=Global.config("person_ranges"), dry_run=dry_run
+    schedules[RequestType.PERSON]: AllPagesScheduler = AllPagesScheduler(
+        request_type=RequestType.PERSON,
+        request_ranges=Global.config("person_ranges"),
+        dry_run=dry_run,
     )
 
     # Initialize Cache/Request Sessions
@@ -291,9 +307,13 @@ async def run(config_file, dry_run, do_loop, server, init_dir, initialize, force
     if do_loop or server:
         wait_time = Global.config("loop_period")
         if server:
-            await asynclogger.info("Opening server on socket {}...".format(Global.conf("server_port")))
+            await asynclogger.info(
+                "Opening server on socket {}...".format(Global.conf("server_port"))
+            )
         else:
-            await asynclogger.info("Starting loop with checks every {} minutes...".format(wait_time))
+            await asynclogger.info(
+                "Starting loop, checking state every {} minutes...".format(wait_time)
+            )
         while True:
             await once()
             await asyncio.sleep(wait_time)
@@ -301,6 +321,7 @@ async def run(config_file, dry_run, do_loop, server, init_dir, initialize, force
         await asynclogger.info("Checking if anything needs to be updated...")
         await once()
         await graceful_shutdown()
+
 
 async def once():
     """

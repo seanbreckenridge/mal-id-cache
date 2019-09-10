@@ -20,6 +20,7 @@ class AbstractScheduler(ABC):
 
     def __init__(
         self,
+        request_type: RequestType,
         request_ranges: Dict[int, int],
         dry_run: bool = False,
     ):
@@ -28,7 +29,7 @@ class AbstractScheduler(ABC):
         Specifying -1 as the first param indicates all pages
         """
 
-        self.request_type: RequestType = RequestType.NOT_SET
+        self.request_type: RequestType = request_type
         self.ranges: Dict[int, int] = request_ranges
         self.state: Dict = {}
         self.dry_run = dry_run
@@ -60,7 +61,11 @@ class AbstractScheduler(ABC):
         # using previous values if possible
         for pages, period in self.ranges.items():
             if pages not in contents:
-                await asynclogger.debug("[{}] Setting previous run time for {} pages to epoch time".format(RequestType.describe(self.request_type), pages))
+                await asynclogger.debug(
+                    "[{}] Setting previous run time for {} pages to epoch time".format(
+                        RequestType.describe(self.request_type), pages
+                    )
+                )
                 self.state[pages] = {
                     "every_x_seconds": int(period),
                     "prev": 0,  # unix epoch
@@ -103,10 +108,15 @@ class AbstractScheduler(ABC):
         await self.read_state()
         for pages, period in self.state.items():
             rewind_to = int(time.time()) - rewind_n_seconds
-            await asynclogger.info("Setting last checked time for {} pages for {} to {} ago".format(pages, self.__class__.__name__, datetime.datetime.fromtimestamp(rewind_to).strftime('%dd %H:%M:%S')))
+            await asynclogger.info(
+                "Setting last checked time for {} pages for {} to {} ago".format(
+                    pages,
+                    self.__class__.__name__,
+                    datetime.datetime.fromtimestamp(rewind_to).strftime("%dd %H:%M:%S"),
+                )
+            )
             period["prev"] = rewind_to  # set all 'prev' times to now
         await self.dump_state()
-
 
     @abstractmethod
     async def prepare_request(self):
@@ -172,27 +182,3 @@ class AllPagesScheduler(AbstractScheduler):
     async def finished_requesting(self):
         self.state[-1]["prev"] = int(time.time())  # only one item exists in state
         await self.dump_state()
-
-
-class AnimeScheduler(JustAddedScheduler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.request_type = RequestType.ANIME
-
-
-class MangaScheduler(JustAddedScheduler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.request_type = RequestType.MANGA
-
-
-class PersonScheduler(AllPagesScheduler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.request_type = RequestType.PERSON
-
-
-class CharacterScheduler(AllPagesScheduler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.request_type = RequestType.CHARACTER

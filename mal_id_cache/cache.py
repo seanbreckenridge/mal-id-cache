@@ -175,7 +175,9 @@ class JustAddedCache(AbstractCache):
         """
         Handles backing off on 'APIError's (429 Errors)
         """
-        await asynclogger.debug("[{}][{}][Page {}]".format("NSFW" if nsfw else "SFW", job.uuid, page))
+        await asynclogger.debug(
+            "[{}][{}][Page {}]".format("NSFW" if nsfw else "SFW", job.uuid, page)
+        )
         return await self.jikan_instance.search(
             search_type=self.scheduler.endpoint,
             query="",  # query string
@@ -209,14 +211,14 @@ class JustAddedCache(AbstractCache):
         :param job: A Job that specifies the SFW search range
         """
 
-        updatable: Optional[UpdateableRange] = UpdateableRange(job.pages)  # default for dry-run
+        updatable: Optional[UpdateableRange] = UpdateableRange(
+            job.pages
+        )  # default for dry-run
         # These should be done in order, since we're rate limited by MAL anyways
         async with requesting:  # make sure/wait till no other jobs are requesting from MAL currently
             await asynclogger.info(f"Processing {job}")
             if self.dry_run:
-                await asynclogger.debug(
-                    f"[Dry Run][{job}]"
-                )
+                await asynclogger.debug(f"[Dry Run][{job}]")
             else:
                 await self._process_job_type(
                     initial_pages=math.ceil(job.pages / 3), job=job, nsfw=True
@@ -228,7 +230,6 @@ class JustAddedCache(AbstractCache):
         await asynclogger.info(f"{job}: writing to cache")
         await self.dump()
         await self.scheduler.finished_requesting(updatable)
-
 
     async def _process_job_type(
         self, initial_pages: int, job: Job, nsfw: bool = False
@@ -253,6 +254,7 @@ class JustAddedCache(AbstractCache):
                             f"Found new entry ({item}) on page {page}"
                         )
         return updatable
+
 
 class AllPagesCache(AbstractCache):
     """

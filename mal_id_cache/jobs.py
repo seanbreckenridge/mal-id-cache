@@ -35,7 +35,6 @@ REQUEST_DESCRIPTION_CONVERTER: Dict[int, str] = {
 }
 
 
-
 class Job:
     """A request to check pages for a request type."""
 
