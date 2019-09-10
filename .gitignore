@@ -1,8 +1,12 @@
 #Project
 
-state
+*state.json
 /jikan-rest
 nohup.out
+/logs/
+/src/
+/.idea
+
 
 # Emacs
 

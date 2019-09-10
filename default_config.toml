@@ -1,0 +1,44 @@
+
+# jikan url
+# dont use the remote API, set up your own:
+# https://github.com/jikan-me/jikan-rest#01-prerequisites
+# https://github.com/fethica/jikan-rest-docker
+jikan_url = "http://localhost:8000/v3/"
+# port to serve local socket for requests
+server_port = 32287
+# minutes to wait between the checks for each range below
+loop_period = 5  # minutes
+
+# convert from time to seconds:
+# python3
+# >>> from datetime import timedelta
+# >>> int(timedelta(hours=5, minutes=10).total_seconds())
+# 18600
+# timedelta accepts:
+# datetime.timedelta(days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0)
+
+# This defines how often each type of request should be checked
+# number on the left defines the number of days
+# number of the right is how many seconds between that range of requests
+# e.g. for [anime], we should check 2 pages every 30 minutes
+# -1 as the page range means check all pages
+# -2 as the page range means check till we hit the last unapproved entry
+
+[anime]
+3 = 1800  # 30 minutes
+6 = 2700  # 2 hours
+10 = 28800  # 8 hours
+20 = 345600  # 4 days
+-2 = 1296000  # check all unapproved entries, every 15 days
+
+[manga]
+4 = 3600  # 1 hours
+8 = 28800  # 8 hours
+20 = 345600  # 4 days
+-2 = 1296000  # check all unapproved entries, every 60 days
+
+[person]
+-1 = 172800  # 2 days
+
+[character]
+-1 = 172800  # 2 days
