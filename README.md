@@ -1,6 +1,6 @@
 # mal-id-cache
 
-This is a cache of IDs on [MAL](https://myanimelist.net)
+This is a cache of anime, manga, person and chracter IDs on [MAL](https://myanimelist.net).
 
 [cache](./cache) includes anime, manga, person and character IDs.
 
