@@ -135,7 +135,7 @@ class JustAddedCache(AbstractCache):
         self,
         scheduler: JustAddedScheduler,
         jikan: jikanpy.AioJikan,
-        dry_run: Optional[bool] = False,
+        dry_run: bool = False,
     ):
 
         super().__init__(dry_run=dry_run)
@@ -211,9 +211,8 @@ class JustAddedCache(AbstractCache):
         :param job: A Job that specifies the SFW search range
         """
 
-        updatable: Optional[UpdateableRange] = UpdateableRange(
-            job.pages
-        )  # default for dry-run
+        # set default for dry-run
+        updatable: UpdateableRange = UpdateableRange(job.pages)
         # These should be done in order, since we're rate limited by MAL anyways
         async with requesting:  # make sure/wait till no other jobs are requesting from MAL currently
             await asynclogger.info(f"Processing {job}")

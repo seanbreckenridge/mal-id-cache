@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
+import json
 import signal
 import asyncio
 import traceback
-from typing import Union, List, Dict, Optional, Any, Callable
+from typing import List, Dict, Optional, Any, Callable
 
 import click
 import aiohttp
@@ -18,6 +19,7 @@ from .cache import AbstractCache, JustAddedCache, AllPagesCache
 from .logging import logger, asynclogger
 from .jobs import RequestType, Job
 from .utils import load_dictionary
+from .unapproved import Unapproved
 
 schedules: Dict[RequestType, Optional[AbstractScheduler]] = {
     RequestType.ANIME: None,
@@ -188,8 +190,16 @@ async def graceful_shutdown(shutdown_signal: Optional[signal.Signals] = None) ->
     required=False,
     help="Delete the cache and state files if they exist and exit",
 )
+@click.option(
+    "--unapproved",
+    'print_unapproved',
+    type=click.Choice(['table', 'json', 'count']),
+    default='json',
+    required=False,
+    help="Prints unapproved entries on MAL to stdout and exits. Assumes cache is built.",
+)
 def run_wrapper(
-    config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete
+    config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete, print_unapproved
 ):
     """Main click command wrapper"""
     loop.run_until_complete(
@@ -202,12 +212,13 @@ def run_wrapper(
             initialize,
             force_state,
             delete,
+            print_unapproved,
         )
     )
 
 
 async def run(
-    config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete
+    config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete, print_unapproved
 ):
     """Check state and update cache, if needed"""
     global schedules
@@ -303,6 +314,24 @@ async def run(
         await graceful_shutdown()
         sys.exit(0)
 
+    unapproved_entries: Unapproved = Unapproved(session=session, anime_cache=cachers[RequestType.ANIME], manga_cache=cachers[RequestType.MANGA], dry_run=dry_run)
+    if print_unapproved is not None:
+        anime = await unapproved_entries.anime()
+        manga = await unapproved_entries.manga()
+        if print_unapproved == "count":
+            click.echo("Unapproved anime count: {}".format(len(anime)))
+            click.echo("Unapproved manga count: {}".format(len(manga)))
+        elif print_unapproved == "json":
+            click.echo(json.dumps({'unapproved_anime': anime, 'unapproved_manga': manga}))
+        else:
+            click.echo("===== ANIME =====")
+            click.echo("\n".join(map(lambda i: f"https://myanimelist.net/anime/{i}", anime)))
+            click.echo("===== MANGA =====")
+            click.echo("\n".join(map(lambda i: f"https://myanimelist.net/manga/{i}", manga)))
+        loop.stop()
+        sys.exit(0)
+
+
     # Start, taking passed flags into consideration
     if do_loop or server:
         wait_time = Global.config("loop_period")
@@ -333,15 +362,6 @@ async def once():
         job: Optional[Job] = await schedule.prepare_request()
         if job is not None:
             await cachers[job.request_type].process_job(job)
-
-
-"""
-Use the unapproved entries page and a complete cache of anime/manga (how do I flag that?)
-to figure out which page the furthest unapproved entry is
-Instead of checking all pages to 'reset' the cache, we can check the relation directory which has approved
-and unapproved entries, to remove merges and deletions, and based on the oldest unapproved ID, keep requesting till
-we pass that ID, then stop
-"""
 
 
 @click.group()

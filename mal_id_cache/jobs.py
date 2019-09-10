@@ -41,7 +41,7 @@ class Job:
     def __init__(
         self, request_type: Union[RequestType, int], pages: Optional[int] = -1
     ):
-        self.uuid = uuid4().hex[:12]
+        self.uuid: str = uuid4().hex[:12]
         self.request_type = request_type
         if self.request_type in [RequestType.ANIME, RequestType.MANGA]:
             self.pages = pages
