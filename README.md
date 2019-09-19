@@ -31,6 +31,7 @@ For person/character:
         2,
         ...
     ]
+}
 ```
 
 ### Raison d'être
@@ -59,7 +60,7 @@ Check [the config file](./default_config.toml) for how often this checks differe
 
 If you'd like to set up your own instance:
 
-To setup the cache, we have to use a local [Jikan](https://github.com/jikan-me/jikan) instance since the remote one would cache requests for too long. See [here](https://github.com/jikan-me/jikan-rest) for how to set that up.
+To create and maintain the cache, we have to use a local [Jikan](https://github.com/jikan-me/jikan) instance since the remote (api.jikan.moe) would cache requests for too long. See [here](https://github.com/jikan-me/jikan-rest) for how to set that up.
 
 After Finishing Step 1 on that page (Installing Dependencies):
 
@@ -75,7 +76,7 @@ pipenv shell
 python3 setup.py install
 # Clone jikan-rest (into this directory is fine, though you can have it somewhere else)
 git clone https://github.com/jikan-me/jikan-rest
-cp env.dist jikan-rest/.env  # Copy environment settings (so requests are cached for too long)
+cp env.dist jikan-rest/.env  # Copy environment settings (for cache expiry config) 
 cd jikan-rest
 composer install
 php artisan key:generate  # Generate APP_KEY
@@ -88,7 +89,9 @@ How you install python requirements is up to you, you can import it into a [`pip
 
 Start the jikan-rest server: `php -S localhost:8000 -t jikan-rest/public >> ~/.mal-id-cache/logs/jikan-requests.log 2>&1`
 
-Run the script:
+This stores 'state' files at `~/.mal-id-cache/state` which keep track of when each page range defined in the [config](./default_config.toml) were last run.
+
+You can run `mal_id_cache` on its own, which checks the state once, or with the `--loop/--server` flags, to check periodically.
 
 ```
 Usage: mal_id_cache [OPTIONS]

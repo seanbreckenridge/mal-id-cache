@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e365b258a4b3920b90c604635449bb91d5b285260441a3ae8ae2aebe1025db4b"
+            "sha256": "6578d6a4aed632ed7efed3d6ab3e78b6aa5c4ef354838a2b9c570afb7b682707"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -21,7 +21,6 @@
                 "sha256:021ea0ba314a86027c166ecc4b4c07f2d40fc0f4b3a950d1868a0f2571c2bbee",
                 "sha256:1e644c2573f953664368de28d2aa4c89dfd64550429d0c27c4680ccd3aa4985d"
             ],
-            "index": "pypi",
             "version": "==0.4.0"
         },
         "aiohttp": {
@@ -93,10 +92,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:046832c04d4e752f37383b628bc601a7ea7211496b4638f6514d0e5b9acc4939",
-                "sha256:945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695"
+                "sha256:e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50",
+                "sha256:fd7c7c74727ddcf00e9acd26bba8da604ffec95bf1c2144e67aff7a8b50e6cef"
             ],
-            "version": "==2019.6.16"
+            "version": "==2019.9.11"
         },
         "chardet": {
             "hashes": [
@@ -136,9 +135,12 @@
             "version": "==2.8"
         },
         "jikanpy": {
-            "editable": true,
-            "git": "https://github.com/AWConant/jikanpy",
-            "ref": "40a9b8d9fa17fe74cf3cc217cf2b1dbb536953c6"
+            "hashes": [
+                "sha256:93c027878ad2790fd4b90f931fc0744747ab97503669d81e76f27ffc73236727",
+                "sha256:ff579bd7be46d093a1083e67aa105250c72a5674e4445a4714fa843f53226dc7"
+            ],
+            "index": "pypi",
+            "version": "==3.4.0"
         },
         "multidict": {
             "hashes": [

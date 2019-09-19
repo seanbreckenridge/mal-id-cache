@@ -16,17 +16,17 @@ import jikanpy
 import bs4
 
 from . import cache_dir, loop
-from .utils import backoff_handler, UpdateableRange, jitter
+from .utils import jitter, backoff_handler
 from .scheduler import AllPagesScheduler, JustAddedScheduler
 from .logging import logger, asynclogger
-from .jobs import Job
+from .jobs import Job, UpdatableRange
 
 
 # Lock to make sure that only one Job is being processed at a time
 # Could alternatively modify the TCPSession passed to aiohttp.ClientSession
 # to limit the simultaneous connections, but since both requests
 # (to localhost:jikan_port and MyAnimeList) are being rate limited
-# by the same "endpoint", this makes more sense.
+# by the same remote endpoint, this makes more sense.
 requesting = asyncio.Lock()
 
 
@@ -205,25 +205,29 @@ class JustAddedCache(AbstractCache):
 
     async def process_job(self, job: Job):
         """
-        Check a number of search pages SFW specified by Job, and half those pages for NSFW
+        Check a number of search pages SFW specified by Job, and 1/3rd those pages for NSFW
         Save to cache json files
 
         :param job: A Job that specifies the SFW search range
         """
 
         # set default for dry-run
-        updatable: UpdateableRange = UpdateableRange(job.pages)
+        updatable: UpdatableRange = UpdatableRange(job.pages)
         # These should be done in order, since we're rate limited by MAL anyways
         async with requesting:  # make sure/wait till no other jobs are requesting from MAL currently
             await asynclogger.info(f"Processing {job}")
             if self.dry_run:
                 await asynclogger.debug(f"[Dry Run][{job}]")
             else:
+                nsfw_pages = sfw_pages = job.pages
+                # Ratio of SFW:NSFW is far more than 3:1, don't have to request the same amount of pages for both.
+                if job.pages > 0:
+                    nsfw_pages = math.ceil(nsfw_pages / 3)
                 await self._process_job_type(
-                    initial_pages=math.ceil(job.pages / 3), job=job, nsfw=True
+                    initial_pages=nsfw_pages, job=job, nsfw=True
                 )
                 updatable = await self._process_job_type(
-                    initial_pages=job.pages, job=job, nsfw=False
+                    initial_pages=sfw_pages, job=job, nsfw=False
                 )
         # Save to cache
         await asynclogger.info(f"{job}: writing to cache")
@@ -232,18 +236,18 @@ class JustAddedCache(AbstractCache):
 
     async def _process_job_type(
         self, initial_pages: int, job: Job, nsfw: bool = False
-    ) -> UpdateableRange:
+    ) -> UpdatableRange:
         """
-        Does API requests and extends range if
+        Does API requests and extends range if it finds new entries
 
         :param initial_pages: Pages to search, specified by Job
         :param job: Metadata for the Task
         :param nsfw: Whether this should search nsfw pages or not
         """
-        updatable = UpdateableRange(check_till=initial_pages)
+        updatable = UpdatableRange(check_till=initial_pages)
         for page in updatable:
             ids = await self.request_page(page, nsfw=nsfw, job=job)
-            if not ids:  # for infinite searches, stop when there are no more entries
+            if not ids:  # for infinite/toggleable searches, stop when there are no more entries
                 return updatable
             for item in ids:
                 if self.add(item=item, nsfw=nsfw):
@@ -269,7 +273,7 @@ class AllPagesCache(AbstractCache):
         self,
         scheduler: AllPagesScheduler,
         session: aiohttp.ClientSession,
-        dry_run: Optional[bool] = False,
+        dry_run: bool = False,
     ):
 
         super().__init__(dry_run=dry_run)
@@ -351,11 +355,11 @@ class AllPagesCache(AbstractCache):
         if resp.status > 400:
             await asynclogger.debug("Status: {} for URL: {}".format(resp.status, url))
         await asyncio.sleep(jitter(self.REQUEST_SLEEP_TIME))
-        if resp.status != 404 and letter != ".":
-            resp.raise_for_status()  # Raise an aiohttp.ClientResponseError if the response status is 400 or higher.
-        else:
+        if resp.status == 404 and letter == ".":
             await asynclogger.debug("Ignoring 404 for . (punctuation) endpoint")
             return None
+        else:
+            resp.raise_for_status()  # Raise an aiohttp.ClientResponseError if the response status is 400 or higher.
         return resp
 
     async def _parse(self, response: Optional[aiohttp.ClientResponse]) -> List[int]:

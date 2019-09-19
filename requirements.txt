@@ -3,7 +3,7 @@ backoff>=1.8.0
 bs4
 Click>=7.0
 GitPython>=3.0
--e git+https://github.com/AWConant/jikanpy@master#egg=jikanpy
+jikanpy>=3.4
 requests>=2.22.0
 toml>=0.10.0
 aiologger>=0.4.0

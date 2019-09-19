@@ -10,12 +10,11 @@ aiohttp = "==3.6.0"
 backoff = ">=1.8.0"
 bs4 = "*"
 click = ">=7.0"
-jikanpy = {editable = true,git = "https://github.com/AWConant/jikanpy",ref = "master"}
+jikanpy = ">=3.4"
 requests = ">=2.22.0"
 toml = ">=0.10.0"
 aiologger = {extras = ["aiofiles"],version = ">=0.4.0"}
 GitPython = ">=3.0"
-aiofiles = ">=0.4.0"
 
 [requires]
 python_version = "3.7"

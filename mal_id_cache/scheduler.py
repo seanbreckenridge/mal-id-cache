@@ -2,14 +2,14 @@ import os
 import datetime
 import json
 import time
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional
 from abc import ABC, abstractmethod
 
 import aiofiles
 
 from . import state_dir
-from .utils import UpdateableRange, load_dictionary, dump_dictionary
-from .jobs import RequestType, Job
+from .utils import load_dictionary, dump_dictionary
+from .jobs import RequestType, Job, UpdatableRange
 from .logging import asynclogger
 
 
@@ -135,9 +135,8 @@ class JustAddedScheduler(AbstractScheduler):
 
     async def prepare_request(self) -> Optional[Job]:
         """
-        :return: A Request for the current range that needs to be checked. None if no pages need to be checked.
+        :return: A Job for the current range that needs to be checked. None if no pages need to be checked.
         """
-        job = None
         max_pages = 0
         await self.read_state()
         for pages, metadata in self.state.items():
@@ -152,7 +151,7 @@ class JustAddedScheduler(AbstractScheduler):
         else:
             return Job(self.request_type, max_pages)
 
-    async def finished_requesting(self, r: UpdateableRange):  # type: ignore
+    async def finished_requesting(self, r: UpdatableRange):  # type: ignore
         """Updates the State after requests are done"""
         for pages, metadata in self.state.items():
             if r.infinite:
@@ -180,5 +179,5 @@ class AllPagesScheduler(AbstractScheduler):
         return job
 
     async def finished_requesting(self):
-        self.state[-1]["prev"] = int(time.time())  # only one item exists in state
+        self.state[-1]["prev"] = int(time.time())  # only one item exists in state obj
         await self.dump_state()

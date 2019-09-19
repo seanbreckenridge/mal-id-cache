@@ -5,6 +5,7 @@ import json
 import signal
 import asyncio
 import traceback
+from contextlib import suppress
 from typing import List, Dict, Optional, Any, Callable
 
 import click
@@ -35,6 +36,9 @@ cachers: Dict[RequestType, Optional[AbstractCache]] = {
     RequestType.PERSON: None,
 }
 
+unapproved: Optional[Unapproved] = None
+
+
 # https://stackoverflow.com/a/43941592
 class Global:
     """
@@ -48,7 +52,7 @@ class Global:
         "person_ranges": {},
         "character_ranges": {},
         "server_port": None,
-        "loop_period": 5,  # default, overridden in load_defaults
+        "loop_period": 300,  # default, overridden in load_defaults
     }
 
     @staticmethod
@@ -94,22 +98,29 @@ async def handle_gather(results: List[Any]):
         if isinstance(result, Exception):
             if isinstance(result, asyncio.CancelledError):
                 await asynclogger.warning("Ignoring asyncio.CancelledError")
-            await asynclogger.exception(
-                f"Gather Handler Caught exception: [{result.__class__.__name__}] {result}"
-            )
-            await asynclogger.exception(
-                "".join(traceback.format_tb(result.__traceback__))
-            )
+            else:
+                await asynclogger.exception(
+                    f"Gather Handler Caught exception: [{result.__class__.__name__}] {result}"
+                )
+                await asynclogger.exception(
+                    "".join(traceback.format_tb(result.__traceback__))
+                )
 
 
 async def graceful_shutdown(shutdown_signal: Optional[signal.Signals] = None) -> None:
+    global unapproved
     if shutdown_signal is not None:
         await asynclogger.info(f"Received exit signal: {shutdown_signal.name}")
     await asynclogger.info("Shutting down...")
     # Close socket if it exists
-    # Cancel remaining tasks
-    # Stop Loop
 
+    # cancel unapproved decay loop
+    if unapproved:
+        unapproved.decay_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await unapproved.decay_task  # wait for task to finish cancelling
+
+    # Cancel remaining tasks
     pending_tasks = [
         t
         for t in asyncio.all_tasks(loop=loop)
@@ -127,6 +138,7 @@ async def graceful_shutdown(shutdown_signal: Optional[signal.Signals] = None) ->
         await asyncio.gather(*pending_tasks, loop=loop, return_exceptions=True)
     )
     await asynclogger.info("Shutdown complete")
+    # Stop Loop
     loop.stop()
 
 
@@ -192,14 +204,21 @@ async def graceful_shutdown(shutdown_signal: Optional[signal.Signals] = None) ->
 )
 @click.option(
     "--unapproved",
-    'print_unapproved',
-    type=click.Choice(['table', 'json', 'count']),
-    default='json',
+    "print_unapproved",
+    type=click.Choice(["table", "json", "count"]),
     required=False,
     help="Prints unapproved entries on MAL to stdout and exits. Assumes cache is built.",
 )
 def run_wrapper(
-    config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete, print_unapproved
+    config_file,
+    dry_run,
+    do_loop,
+    server,
+    init_dir,
+    initialize,
+    force_state,
+    delete,
+    print_unapproved,
 ):
     """Main click command wrapper"""
     loop.run_until_complete(
@@ -218,10 +237,18 @@ def run_wrapper(
 
 
 async def run(
-    config_file, dry_run, do_loop, server, init_dir, initialize, force_state, delete, print_unapproved
+    config_file,
+    dry_run,
+    do_loop,
+    server,
+    init_dir,
+    initialize,
+    force_state,
+    delete,
+    print_unapproved,
 ):
     """Check state and update cache, if needed"""
-    global schedules
+    global schedules, cachers, unapproved
 
     if init_dir:
         await asynclogger.info("Directories have been initialized")
@@ -244,22 +271,22 @@ async def run(
     loop.set_exception_handler(exception_handler)
 
     # Initialize Schedules
-    schedules[RequestType.ANIME]: JustAddedScheduler = JustAddedScheduler(
+    schedules[RequestType.ANIME] = JustAddedScheduler(
         request_type=RequestType.ANIME,
         request_ranges=Global.config("anime_ranges"),
         dry_run=dry_run,
     )
-    schedules[RequestType.MANGA]: JustAddedScheduler = JustAddedScheduler(
+    schedules[RequestType.MANGA] = JustAddedScheduler(
         request_type=RequestType.MANGA,
         request_ranges=Global.config("manga_ranges"),
         dry_run=dry_run,
     )
-    schedules[RequestType.CHARACTER]: AllPagesScheduler = AllPagesScheduler(
+    schedules[RequestType.CHARACTER] = AllPagesScheduler(
         request_type=RequestType.CHARACTER,
         request_ranges=Global.config("character_ranges"),
         dry_run=dry_run,
     )
-    schedules[RequestType.PERSON]: AllPagesScheduler = AllPagesScheduler(
+    schedules[RequestType.PERSON] = AllPagesScheduler(
         request_type=RequestType.PERSON,
         request_ranges=Global.config("person_ranges"),
         dry_run=dry_run,
@@ -281,6 +308,14 @@ async def run(
     )
     cachers[RequestType.CHARACTER] = AllPagesCache(
         scheduler=schedules[RequestType.CHARACTER], session=session, dry_run=dry_run
+    )
+
+    # initialize unapproved metadata singleton (don't run request unless needed)
+    unapproved = Unapproved(
+        session=session,
+        anime_cache=cachers[RequestType.ANIME],
+        manga_cache=cachers[RequestType.MANGA],
+        dry_run=dry_run,
     )
 
     # Set state to 'force_state' seconds in the past and exit if --force-state was passed
@@ -314,23 +349,27 @@ async def run(
         await graceful_shutdown()
         sys.exit(0)
 
-    unapproved_entries: Unapproved = Unapproved(session=session, anime_cache=cachers[RequestType.ANIME], manga_cache=cachers[RequestType.MANGA], dry_run=dry_run)
     if print_unapproved is not None:
-        anime = await unapproved_entries.anime()
-        manga = await unapproved_entries.manga()
+        anime = await Unapproved.instance.anime()
+        manga = await Unapproved.instance.manga()
         if print_unapproved == "count":
             click.echo("Unapproved anime count: {}".format(len(anime)))
             click.echo("Unapproved manga count: {}".format(len(manga)))
         elif print_unapproved == "json":
-            click.echo(json.dumps({'unapproved_anime': anime, 'unapproved_manga': manga}))
+            click.echo(
+                json.dumps({"unapproved_anime": anime, "unapproved_manga": manga})
+            )
         else:
             click.echo("===== ANIME =====")
-            click.echo("\n".join(map(lambda i: f"https://myanimelist.net/anime/{i}", anime)))
+            click.echo(
+                "\n".join(map(lambda i: f"https://myanimelist.net/anime/{i}", anime))
+            )
             click.echo("===== MANGA =====")
-            click.echo("\n".join(map(lambda i: f"https://myanimelist.net/manga/{i}", manga)))
+            click.echo(
+                "\n".join(map(lambda i: f"https://myanimelist.net/manga/{i}", manga))
+            )
         loop.stop()
         sys.exit(0)
-
 
     # Start, taking passed flags into consideration
     if do_loop or server:

@@ -1,4 +1,3 @@
-
 # jikan url
 # dont use the remote API, set up your own:
 # https://github.com/jikan-me/jikan-rest#01-prerequisites
@@ -7,18 +6,10 @@ jikan_url = "http://localhost:8000/v3/"
 # port to serve local socket for requests
 server_port = 32287
 # minutes to wait between the checks for each range below
-loop_period = 5  # minutes
-
-# convert from time to seconds:
-# python3
-# >>> from datetime import timedelta
-# >>> int(timedelta(hours=5, minutes=10).total_seconds())
-# 18600
-# timedelta accepts:
-# datetime.timedelta(days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0)
+loop_period = 300  # seconds
 
 # This defines how often each type of request should be checked
-# number on the left defines the number of pages
+# number on the left is the number of pages
 # number of the right is how many seconds between that range of requests
 # e.g. for [anime], we should check 3 pages every 30 minutes
 # -1 as the page range means check all pages
@@ -42,3 +33,11 @@ loop_period = 5  # minutes
 
 [character]
 -1 = 172800  # 2 days
+
+# to convert from some amount of time to seconds:
+# python3
+# >>> from datetime import timedelta
+# >>> int(timedelta(hours=5, minutes=10).total_seconds())
+# 18600
+# timedelta accepts:
+# datetime.timedelta(days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0)
