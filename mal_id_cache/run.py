@@ -36,7 +36,7 @@ cachers: Dict[RequestType, Optional[AbstractCache]] = {
     RequestType.PERSON: None,
 }
 
-unapproved: Optional[Unapproved] = None
+unapproved_instance: Optional[Unapproved] = None
 
 
 # https://stackoverflow.com/a/43941592
@@ -108,17 +108,17 @@ async def handle_gather(results: List[Any]):
 
 
 async def graceful_shutdown(shutdown_signal: Optional[signal.Signals] = None) -> None:
-    global unapproved
+    global unapproved_instance
     if shutdown_signal is not None:
         await asynclogger.info(f"Received exit signal: {shutdown_signal.name}")
     await asynclogger.info("Shutting down...")
     # Close socket if it exists
 
     # cancel unapproved decay loop
-    if unapproved:
-        unapproved.decay_task.cancel()
+    if unapproved_instance:
+        unapproved_instance.decay_task.cancel()
         with suppress(asyncio.CancelledError):
-            await unapproved.decay_task  # wait for task to finish cancelling
+            await unapproved_instance.decay_task  # wait for task to finish cancelling
 
     # Cancel remaining tasks
     pending_tasks = [
@@ -248,7 +248,7 @@ async def run(
     print_unapproved,
 ):
     """Check state and update cache, if needed"""
-    global schedules, cachers, unapproved
+    global schedules, cachers, unapproved_instance
 
     if init_dir:
         await asynclogger.info("Directories have been initialized")
@@ -311,7 +311,7 @@ async def run(
     )
 
     # initialize unapproved metadata singleton (don't run request unless needed)
-    unapproved = Unapproved(
+    unapproved_instance = Unapproved(
         session=session,
         anime_cache=cachers[RequestType.ANIME],
         manga_cache=cachers[RequestType.MANGA],
@@ -345,20 +345,20 @@ async def run(
 
     if initialize:
         for req_type in cachers:
-            await cachers[req_type].process_job(Job(request_type=req_type, pages=-1))
+            await cachers[req_type].process_job(Job(request_type=req_type, pages=-1), unapproved_instance)
         await graceful_shutdown()
         sys.exit(0)
 
     if print_unapproved is not None:
-        anime = await Unapproved.instance.anime()
-        manga = await Unapproved.instance.manga()
+        anime = await unapproved_instance.anime()
+        manga = await unapproved_instance.manga()
         if print_unapproved == "count":
             click.echo("Unapproved anime count: {}".format(len(anime)))
             click.echo("Unapproved manga count: {}".format(len(manga)))
         elif print_unapproved == "json":
-            click.echo(
-                json.dumps({"unapproved_anime": anime, "unapproved_manga": manga})
-            )
+            with open("unapproved_mal_ids.json", 'w') as u_json_fp:
+                json.dump({"unapproved_anime": anime, "unapproved_manga": manga}, u_json_fp)
+            click.echo("Wrote results to 'unapproved_mal_ids.json' in this directory.")
         else:
             click.echo("===== ANIME =====")
             click.echo(
@@ -400,7 +400,7 @@ async def once():
     for schedule in schedules.values():
         job: Optional[Job] = await schedule.prepare_request()
         if job is not None:
-            await cachers[job.request_type].process_job(job)
+            await cachers[job.request_type].process_job(job, unapproved_instance)
 
 
 @click.group()

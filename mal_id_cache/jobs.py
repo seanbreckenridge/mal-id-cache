@@ -1,8 +1,9 @@
 from uuid import uuid4
 from enum import IntEnum
-from typing import Dict, Optional, Union
+from typing import Dict, Union
 
 from .logging import asynclogger
+
 
 class RequestType(IntEnum):
     NOT_SET = 0
@@ -40,7 +41,7 @@ class Job:
     """A request to check pages for a request type."""
 
     def __init__(
-        self, request_type: Union[RequestType, int], pages: Optional[int] = -1
+        self, request_type: Union[RequestType], pages: int = -1
     ):
         self.uuid: str = uuid4().hex[:12]
         self.request_type = request_type
@@ -114,7 +115,7 @@ class UpdatableRange:
         :param n: The page a new entry was found on
         :return: None
         """
-        if not self.infinite:
+        if not (self.infinite or self.is_toggleable):
             # Toggleable entries already have a built cache, they should be
             # checking for approved entries and logging them
             extend_till = n + self.extend_by

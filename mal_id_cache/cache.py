@@ -19,7 +19,8 @@ from . import cache_dir, loop
 from .utils import jitter, backoff_handler
 from .scheduler import AllPagesScheduler, JustAddedScheduler
 from .logging import logger, asynclogger
-from .jobs import Job, UpdatableRange
+from .jobs import Job, UpdatableRange, RequestType
+from .unapproved import Unapproved
 
 
 # Lock to make sure that only one Job is being processed at a time
@@ -119,7 +120,7 @@ class AbstractCache(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def process_job(self, job: Job) -> None:
+    async def process_job(self, job: Job, unapproved: Optional[Unapproved]) -> None:
         """
         Processes, requests and saves items into cache
         """
@@ -203,7 +204,7 @@ class JustAddedCache(AbstractCache):
         self.cache["nsfw" if nsfw else "sfw"].add(int(item))
         return True
 
-    async def process_job(self, job: Job):
+    async def process_job(self, job: Job, unapproved: Unapproved):  # type: ignore
         """
         Check a number of search pages SFW specified by Job, and 1/3rd those pages for NSFW
         Save to cache json files
@@ -224,10 +225,10 @@ class JustAddedCache(AbstractCache):
                 if job.pages > 0:
                     nsfw_pages = math.ceil(nsfw_pages / 3)
                 await self._process_job_type(
-                    initial_pages=nsfw_pages, job=job, nsfw=True
+                    initial_pages=nsfw_pages, job=job, unapproved=unapproved, nsfw=True
                 )
                 updatable = await self._process_job_type(
-                    initial_pages=sfw_pages, job=job, nsfw=False
+                    initial_pages=sfw_pages, job=job, unapproved=unapproved, nsfw=False
                 )
         # Save to cache
         await asynclogger.info(f"{job}: writing to cache")
@@ -235,20 +236,53 @@ class JustAddedCache(AbstractCache):
         await self.scheduler.finished_requesting(updatable)
 
     async def _process_job_type(
-        self, initial_pages: int, job: Job, nsfw: bool = False
+        self, initial_pages: int, job: Job, unapproved: Unapproved, nsfw: bool = False,
     ) -> UpdatableRange:
         """
         Does API requests and extends range if it finds new entries
+        If this is a toggelable request, it continues
+        till it reaches the page that would have included the last unapproved entry
+
 
         :param initial_pages: Pages to search, specified by Job
         :param job: Metadata for the Task
         :param nsfw: Whether this should search nsfw pages or not
         """
+
         updatable = UpdatableRange(check_till=initial_pages)
+
+        # if this is a toggleable request
+        if updatable.is_toggleable:
+            # get the last unapproved entry
+            if job.request_type == RequestType.ANIME:
+                unapproved_ids = await unapproved.anime()
+                all_ids = unapproved.all_anime_ids
+            else:
+                unapproved_ids = await unapproved.manga()
+                all_ids = unapproved.all_manga_ids
+            if len(unapproved_ids) != 0:
+                last_unapproved_id = unapproved_ids[0]
+                await asynclogger.debug("Last unapproved ID: {}".format(last_unapproved_id))
+            # check if any entries have been merged/deleted
+            await asynclogger.info("[{}]Checking if any {} IDs have been merged/removed...".format(job.uuid, 'nsfw' if nsfw else 'sfw'))
+            unapproved_id_set = set(all_ids)
+            filtered_ids = set([i for i in self.cache['nsfw' if nsfw else 'sfw'] if i in unapproved_id_set])
+            for removed_id in self.cache['nsfw' if nsfw else 'sfw'] - filtered_ids:
+                await asynclogger.debug("Removed deleted/merged ID: {}".format(removed_id))
+            self.cache['nsfw' if nsfw else 'sfw'] = filtered_ids
+
+        # request pages
         for page in updatable:
             ids = await self.request_page(page, nsfw=nsfw, job=job)
             if not ids:  # for infinite/toggleable searches, stop when there are no more entries
                 return updatable
+            elif updatable.is_toggleable:
+                if len(unapproved_ids) == 0:  # If there are no unapproved entries (probably not going to happen), stop
+                    updatable.toggle_off()
+                else:
+                    if ids[-1] < last_unapproved_id:  # if we've passed the last unapproved ID
+                        updatable.toggle_off()
+                        return updatable
             for item in ids:
                 if self.add(item=item, nsfw=nsfw):
                     await updatable.found_entry_on_page(page)
@@ -299,11 +333,14 @@ class AllPagesCache(AbstractCache):
         self.cache["ids"].add(int(item))
         return True
 
-    async def process_job(self, job: Job) -> None:
+    async def process_job(self, job: Job, unapproved: Optional[Unapproved] = None) -> None:
         """
         Request all pages for the request type.
         Save to cache json files
         """
+
+        # Remove previous IDs so that deleted characters/person don't remain in cache
+        self._set_default_cache()
 
         async with requesting:
             await asynclogger.info(f"Processing {job}")

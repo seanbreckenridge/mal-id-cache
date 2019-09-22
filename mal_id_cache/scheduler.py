@@ -109,10 +109,10 @@ class AbstractScheduler(ABC):
         for pages, period in self.state.items():
             rewind_to = int(time.time()) - rewind_n_seconds
             await asynclogger.info(
-                "Setting last checked time for {} pages for {} to {} ago".format(
+                "Setting last checked time for {} pages for {} to {}".format(
                     pages,
                     self.__class__.__name__,
-                    datetime.datetime.fromtimestamp(rewind_to).strftime("%dd %H:%M:%S"),
+                    datetime.datetime.fromtimestamp(rewind_to),
                 )
             )
             period["prev"] = rewind_to  # set all 'prev' times to now
@@ -141,8 +141,8 @@ class JustAddedScheduler(AbstractScheduler):
         await self.read_state()
         for pages, metadata in self.state.items():
             if time.time() - metadata["prev"] > metadata["every_x_seconds"]:
-                if pages == -1:
-                    max_pages = -1  # request all pages
+                if pages < 0:  # sentinel values
+                    max_pages = pages
                     break
                 elif pages > max_pages:
                     max_pages = pages

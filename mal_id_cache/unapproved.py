@@ -7,7 +7,6 @@ import backoff
 import bs4
 
 from . import loop
-from .cache import JustAddedCache
 from .logging import asynclogger
 from .utils import backoff_handler
 
@@ -17,7 +16,6 @@ class Unapproved:
     Class to parse the unapproved entry page
     """
 
-    INSTANCE = None
     WAIT_TIME = 20
     ERR_WAIT_TIME = 120
     DECAY_CHECK_TIME = 60
@@ -29,8 +27,8 @@ class Unapproved:
     def __init__(
         self,
         session: aiohttp.ClientSession,
-        anime_cache: JustAddedCache,
-        manga_cache: JustAddedCache,
+        anime_cache,  # JustAddedCache
+        manga_cache,
         dry_run: bool = False,
     ):
         self.session: aiohttp.ClientSession = session
@@ -39,27 +37,20 @@ class Unapproved:
         self.manga_cache = manga_cache
         self._html_response = None
         self._html_text = None
-        self._anime: Optional[List[int]] = None
-        self._manga: Optional[List[int]] = None
+        self.all_anime_ids: Optional[List[int]] = None  # Approved and Unapproved anime IDs
+        self.all_manga_ids: Optional[List[int]] = None  # Approved and Unapproved manga IDs
         self._requested_at = None  # used to decay information if not used for DECAY_WAIT_TIME
-        if self.INSTANCE is None:
-            self.INSTANCE = self
         self.decay_task = loop.create_task(self.decay_loop())
-
-
-    @classmethod
-    def instance(cls):
-        return cls.INSTANCE
 
     @property
     def is_parsed(self):
-        return self._anime is not None and self._manga is not None
+        return self.all_anime_ids is not None and self.all_manga_ids is not None
 
     @backoff.on_exception(
         backoff.constant,
         aiohttp.ClientResponseError,
         interval=ERR_WAIT_TIME,
-        max_tries=10,
+        max_tries=5,
         jitter=None,
         on_backoff=lambda details: backoff_handler(details),
     )
@@ -76,13 +67,14 @@ class Unapproved:
             self._html_text = await self._html_response.text()
 
     async def _parse(self):
+
         if self._html_response is None:
             await self._request()
         if not self.is_parsed:
             if self.dry_run:
                 await asynclogger.debug("[Dry Run] Setting parsed anime/manga to empty lists.")
-                self._anime = []
-                self._manga = []
+                self.all_anime_ids = []
+                self.all_manga_ids = []
             else:
                 await loop.run_in_executor(None, self._parse_page)
 
@@ -97,8 +89,8 @@ class Unapproved:
             )
         anime_anchors = tables[0].find_all("a")
         manga_anchors = tables[1].find_all("a")
-        self._anime = list(map(lambda a: int(a.text), anime_anchors))
-        self._manga = list(map(lambda a: int(a.text), manga_anchors))
+        self.all_anime_ids = list(map(lambda a: int(a.text), anime_anchors))
+        self.all_manga_ids = list(map(lambda a: int(a.text), manga_anchors))
 
     async def anime(self) -> List[int]:
         if not self.is_parsed:
@@ -107,7 +99,9 @@ class Unapproved:
             "nsfw"
         ]
         self._requested_at = time.time()
-        return sorted(set(self._anime) - approved_entries)
+        unapproved_anime: List[int] = sorted(set(self.all_anime_ids) - approved_entries)
+        await asynclogger.debug("There are currently {} unapproved anime".format(len(unapproved_anime)))
+        return unapproved_anime
 
     async def manga(self) -> List[int]:
         self._requested_at = time.time()
@@ -117,7 +111,9 @@ class Unapproved:
             "nsfw"
         ]
         self._requested_at = time.time()
-        return sorted(set(self._manga) - approved_entries)
+        unapproved_manga: List[int] = sorted(set(self.all_manga_ids) - approved_entries)
+        await asynclogger.debug("There are currently {} unapproved manga".format(len(unapproved_manga)))
+        return unapproved_manga
 
     async def decay_loop(self):
         """
@@ -127,7 +123,7 @@ class Unapproved:
         await asynclogger.info("Starting unapproved decay loop...")
         while True:
             if self._requested_at is not None:  # if there is currently data
-                await asynclogger.debug("{} seconds left".format(self.DECAY_WAIT_TIME - (time.time() - self._requested_at)))
+                # await asynclogger.debug("{} seconds left".format(self.DECAY_WAIT_TIME - (time.time() - self._requested_at)))
                 if time.time() - self._requested_at > self.DECAY_WAIT_TIME:  # if it hasn't been requested in a while
                     # remove it
                     await self.decay_data()
@@ -141,6 +137,6 @@ class Unapproved:
         await asynclogger.info("Removing cached data...")
         self._html_response = None
         self._html_text = None
-        self._anime = []
-        self._manga = []
+        self.all_anime_ids = []
+        self.all_manga_ids = []
         self._requested_at = None
