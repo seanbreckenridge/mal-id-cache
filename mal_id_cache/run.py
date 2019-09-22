@@ -380,7 +380,7 @@ async def run(
             )
         else:
             await asynclogger.info(
-                "Starting loop, checking state every {} minutes...".format(wait_time)
+                "Starting loop, checking state every {} seconds...".format(wait_time)
             )
         while True:
             await once()
