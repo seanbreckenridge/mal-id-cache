@@ -207,7 +207,7 @@ async def graceful_shutdown(shutdown_signal: Optional[signal.Signals] = None) ->
     "print_unapproved",
     type=click.Choice(["table", "json", "count"]),
     required=False,
-    help="Prints unapproved entries on MAL to stdout and exits. Assumes cache is built.",
+    help="Prints unapproved entries on MAL and exits. 'json' saves a file to current directory. Assumes cache is built.",
 )
 def run_wrapper(
     config_file,
