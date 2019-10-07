@@ -209,6 +209,14 @@ async def graceful_shutdown(shutdown_signal: Optional[signal.Signals] = None) ->
     required=False,
     help="Prints unapproved entries on MAL and exits. 'json' saves a file to current directory. Assumes cache is built.",
 )
+@click.option(
+    "--commit",
+    "push_commit",
+    default=False,
+    is_flag=True,
+    required=False,
+    help="If the cache/*_cache.json files have changed, push them to the remote git repository"
+)
 def run_wrapper(
     config_file,
     dry_run,
@@ -219,6 +227,7 @@ def run_wrapper(
     force_state,
     delete,
     print_unapproved,
+    push_commit,
 ):
     """Main click command wrapper"""
     loop.run_until_complete(
@@ -232,6 +241,7 @@ def run_wrapper(
             force_state,
             delete,
             print_unapproved,
+            push_commit,
         )
     )
 
@@ -246,6 +256,7 @@ async def run(
     force_state,
     delete,
     print_unapproved,
+    push_commit,
 ):
     """Check state and update cache, if needed"""
     global schedules, cachers, unapproved_instance
@@ -383,45 +394,42 @@ async def run(
                 "Starting loop, checking state every {} seconds...".format(wait_time)
             )
         while True:
-            await once()
+            await once(push_commit)
             await asyncio.sleep(wait_time)
     else:
         await asynclogger.info("Checking if anything needs to be updated...")
-        await once()
+        await once(push_commit)
         await graceful_shutdown()
 
 
-async def once():
+async def once(push_commit: bool):
     """
     Runs and 'main loop' once
     Adds any tasks that should be run, waits for task completing
+
+    push_commit: the --commit flag was passed when starting, push any changes to remote git
     """
     global schedules, cachers
     for schedule in schedules.values():
         job: Optional[Job] = await schedule.prepare_request()
         if job is not None:
             await cachers[job.request_type].process_job(job, unapproved_instance)
+    if push_commit:
+        await commit()
 
 
-@click.group()
-def utils():
-    pass
-
-
-@click.command()
 async def commit():
-    return
+    global cachers
     repo = Repo(repo_dir)
-    if "cache.json" in [i.a_path for i in repo.index.diff(None)]:
-        await asynclogger.debug(
-            "[git] cache.json has been changed, committing files and pushing"
-        )
-        repo.git.add("cache.json")
-        repo.index.commit("cache.json update")
-        origin = repo.remote(name="origin")
-        origin.push()
-    else:
-        await asynclogger.debug("[git] cache.json is unchanged")
+    relative_cache_files = [f"cache/{c.scheduler.endpoint}_cache.json" for c in cachers.values()] # e.g. cache/anime_cache.json
+    dirty_files = set(relative_cache_files).intersection([i.a_path for i in repo.index.diff(None)])
+    if dirty_files:
+        await asynclogger.debug("json files which have been modified: {}".format(dirty_files))
+        for d_f in dirty_files:
+            repo.git.add(d_f)
+        repo.index.commit("cache updates")
+        remote = repo.remote(name="origin")
+        remote.push()  # !!!!! requires you to have a SSH key set up, else it will prompt for a password every time
 
 
 if __name__ == "__main__":
