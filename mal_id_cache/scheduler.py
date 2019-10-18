@@ -15,7 +15,7 @@ from .logging import asynclogger
 
 class AbstractScheduler(ABC):
     """
-    A class to keep when last page ranges of requests were requested.
+    A class to keep track of when last page ranges of requests were requested.
     """
 
     def __init__(
