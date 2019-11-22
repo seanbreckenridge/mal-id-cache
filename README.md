@@ -1,6 +1,6 @@
 # mal-id-cache
 
-This is a cache of anime, manga, person and chracter IDs on [MAL](https://myanimelist.net).
+This is a cache of anime, manga, person and character IDs on [MAL](https://myanimelist.net).
 
 [cache](./cache) includes anime, manga, person and character IDs.
 
@@ -52,7 +52,7 @@ The most obvious application for this cache is to use the cache to choose an ent
 
 This will be updated whenever a new entry is added.
 
-Since Github doesn't allow you to serve large files without an authenticated token, the easiest way to download this and keep it updated is to `git clone https://github.com/seanbreckenridge/mal-id-cache` and have a script that `git pull`s periodically.
+Since GitHub doesn't allow you to serve large files without an authenticated token, the easiest way to download this and keep it updated is to `git clone https://github.com/seanbreckenridge/mal-id-cache` and have a script that `git pull`s periodically.
 
 Check [the config file](./default_config.toml) for how often this checks different ranges of IDs.
 
