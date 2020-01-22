@@ -20,13 +20,13 @@ loop_period = 300  # seconds
 6 = 7200  # 2 hours
 10 = 28800  # 8 hours
 20 = 345600  # 4 days
--2 = 1296000  # check all unapproved entries, every 15 days
+-1 = 1296000  # check all entries, every 15 days
 
 [manga]
 4 = 3600  # 1 hours
 8 = 28800  # 8 hours
 20 = 345600  # 4 days
--2 = 1296000  # check all unapproved entries, every 15 days
+-1 = 1296000  # check all entries, every 15 days
 
 [person]
 -1 = 172800  # 2 days
