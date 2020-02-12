@@ -52,7 +52,7 @@ The most obvious application for this cache is to use the cache to choose an ent
 
 This will be updated whenever a new entry is added.
 
-Since GitHub doesn't allow you to serve large files without an authenticated token, the easiest way to download this and keep it updated is to `git clone https://github.com/seanbreckenridge/mal-id-cache` and have a script that `git pull`s periodically.
+You can either clone this repo to your system and set up a script that `git pull`s periodically, or download the raw json files directly from [`cache`](./cache) (though that means you have no way of knowing when the file is updated)
 
 Check [the config file](./default_config.toml) for how often this checks different ranges of IDs.
 
