@@ -125,7 +125,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-If you have this forked/are pushing to a git repo, that can be done like: `mal_id_cache --loop --commit`
+If you have this forked/are pushing to a git repo, that can be done like: `mal_id_cache --loop --commit` (which is what [`update_loop.sh`](./update_loop.sh) does).
 
 #### Thanks
 
