@@ -1,6 +1,7 @@
 #Project
 
 *state.json
+unapproved_mal_ids.json
 /jikan-rest
 nohup.out
 /logs/
