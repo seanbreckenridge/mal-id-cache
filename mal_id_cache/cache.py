@@ -252,7 +252,7 @@ class JustAddedCache(AbstractCache):
         updatable = UpdatableRange(check_till=initial_pages)
 
         # if this is a toggleable request
-        if updatable.is_toggleable:
+        if updatable.is_toggleable or updatable.infinite:
             # get the last unapproved entry
             if job.request_type == RequestType.ANIME:
                 unapproved_ids = await unapproved.anime()
