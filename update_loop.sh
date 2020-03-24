@@ -4,5 +4,5 @@
 CUR_DIR="$(dirname "${BASH_SOURCE[0]}")"
 cd "$CUR_DIR"
 
-pipenv run mal_id_cache --loop --commit
+exec pipenv run mal_id_cache --loop --commit
 
