@@ -392,8 +392,8 @@ class AllPagesCache(AbstractCache):
         if resp.status > 400:
             await asynclogger.debug("Status: {} for URL: {}".format(resp.status, url))
         await asyncio.sleep(jitter(self.REQUEST_SLEEP_TIME))
-        if resp.status == 404 and letter == ".":
-            await asynclogger.debug("Ignoring 404 for . (punctuation) endpoint")
+        if letter == "." and resp.status != 429 and resp.status > 400:
+            await asynclogger.debug(f"Ignoring {resp.status} for . (punctuation) endpoint")
             return None
         else:
             resp.raise_for_status()  # Raise an aiohttp.ClientResponseError if the response status is 400 or higher.
