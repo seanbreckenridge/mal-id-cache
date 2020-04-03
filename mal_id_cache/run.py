@@ -411,9 +411,12 @@ async def once(push_commit: bool):
     """
     global schedules, cachers
     for schedule in schedules.values():
-        job: Optional[Job] = await schedule.prepare_request()
-        if job is not None:
-            await cachers[job.request_type].process_job(job, unapproved_instance)
+        # disable person/character caching, no feasible way to update
+        # that after the change MAL made on Thu 02 Apr 2020  PDT
+        if schedule.request_type in [RequestType.ANIME, RequestType.MANGA]:
+            job: Optional[Job] = await schedule.prepare_request()
+            if job is not None:
+                await cachers[job.request_type].process_job(job, unapproved_instance)
     if push_commit:
         await commit()
 

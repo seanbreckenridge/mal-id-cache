@@ -2,6 +2,8 @@
 
 This is a cache of anime, manga, person and character IDs on [MAL](https://myanimelist.net).
 
+### NOTE: Since April 2nd 2020, MAL updated how characters/persons on their site are laid out making the People/Characters much more difficult to check for updates. The `people.json` and `character.json` files will remain unchanged for the forseeable future, they are up to date as of March 31st, 2020.
+
 [cache](./cache) includes anime, manga, person and character IDs.
 
 The JSON files for anime/manga are structured like:
