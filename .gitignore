@@ -2,6 +2,7 @@
 
 *state.json
 unapproved_mal_ids.json
+tags*
 /jikan-rest
 nohup.out
 /logs/
