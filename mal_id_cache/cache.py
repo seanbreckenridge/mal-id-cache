@@ -36,7 +36,7 @@ class AbstractCache(ABC):
     A class which interacts with the underlying JSON files for each cache
     """
 
-    REQUEST_SLEEP_TIME = 4
+    REQUEST_SLEEP_TIME = 15
 
     def __init__(self, dry_run: bool = False):
         """
