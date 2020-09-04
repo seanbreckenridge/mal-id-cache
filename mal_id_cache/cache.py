@@ -36,7 +36,7 @@ class AbstractCache(ABC):
     A class which interacts with the underlying JSON files for each cache
     """
 
-    REQUEST_SLEEP_TIME = 15
+    REQUEST_SLEEP_TIME = 60
 
     def __init__(self, dry_run: bool = False):
         """
@@ -167,7 +167,7 @@ class JustAddedCache(AbstractCache):
     @backoff.on_exception(
         backoff.fibo,
         jikanpy.APIException,
-        max_tries=10,
+        max_tries=1000,
         on_backoff=lambda details: backoff_handler(
             details
         ),  # backoff checks whether or not this is async/await
@@ -374,7 +374,7 @@ class AllPagesCache(AbstractCache):
     @backoff.on_exception(
         backoff.fibo,
         aiohttp.ClientResponseError,
-        max_tries=10,
+        max_tries=1000,
         on_backoff=lambda details: backoff_handler(details),
     )
     async def _request(self, letter: str, job) -> Optional[aiohttp.ClientResponse]:
