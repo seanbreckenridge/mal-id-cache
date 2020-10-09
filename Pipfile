@@ -10,11 +10,14 @@ aiohttp = ">=3.5.4"
 backoff = ">=1.8.0"
 bs4 = "*"
 click = ">=7.0"
-jikanpy = ">=4.1.0"
+jikanpy = ">=4.2.2"
 requests = ">=2.22.0"
 toml = ">=0.10.0"
-aiologger = {extras = ["aiofiles"],version = ">=0.4.0"}
 GitPython = ">=3.0"
 
 [requires]
 python_version = "3.7"
+
+[packages.aiologger]
+extras = [ "aiofiles",]
+version = ">=0.4.0"
