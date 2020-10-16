@@ -20,14 +20,14 @@ loop_period = 300  # seconds
 #6 = 7200  # 2 hours
 8 = 28800  # 8 hours
 #10 = 28800  # 8 hours
-#20 = 345600  # 4 days
+20 = 345600  # 4 days
 -1 = 1296000  # check all entries, every 15 days
 
 [manga]
 4 = 14400  # 1 hours
 10 = 28800  # 1 hours
 #8 = 28800  # 8 hours
-#20 = 345600  # 4 days
+20 = 345600  # 4 days
 -1 = 1296000  # check all entries, every 15 days
 
 [person]
