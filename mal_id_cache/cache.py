@@ -161,7 +161,6 @@ class JustAddedCache(AbstractCache):
         :return: the IDs from the response dictionary from jikan
         """
         response = await self._request(page, job, nsfw)
-        await asyncio.sleep(jitter(self.REQUEST_SLEEP_TIME))
         return list(map(lambda r: r["mal_id"], response["results"]))
 
     @backoff.on_exception(
@@ -176,6 +175,7 @@ class JustAddedCache(AbstractCache):
         """
         Handles backing off on 'APIError's (429 Errors)
         """
+        await asyncio.sleep(jitter(self.REQUEST_SLEEP_TIME))  # sleep before requests so errors dont cause 503/429s
         await asynclogger.debug(
             "[{}][{}][Page {}]".format("NSFW" if nsfw else "SFW", job.uuid, page)
         )
