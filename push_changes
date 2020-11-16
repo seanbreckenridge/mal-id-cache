@@ -1,0 +1,58 @@
+#!/bin/bash
+# Template from https://github.com/seanbreckenridge/havecmd
+
+# get the name of this script
+declare script_name
+script_name="$(basename "${BASH_SOURCE[0]}")"
+
+# function to verify an external command is installed
+havecmd() {
+	local BINARY ERRMSG
+	# error if first argument isn't provided
+	BINARY="${1:?Must provide command to check}"
+	# the commend exists, exit with 0 (success!)
+	if command -v "${BINARY}" >/dev/null 2>&1; then
+		return 0
+	else
+		# construct error message
+		ERRMSG="'${script_name}' requires '${BINARY}', could not find that on your \$PATH"
+		if [[ -n "$2" ]]; then
+			ERRMSG="${ERRMSG}. $2"
+		fi
+		printf '%s\n' "${ERRMSG}" 1>&2
+		return 1
+	fi
+} && export -f havecmd
+# exported the function, is defined in any other bash scripts this calls
+
+# If the first argument isn't available on the users $PATH
+# print an error and the second argument, if given
+# set the -e flag; exits if any of the dependencies aren't satisfied
+set -e
+# Examples
+havecmd python
+havecmd git
+havecmd realpath
+set +e
+
+declare this_dir
+this_dir="$(dirname "${BASH_SOURCE[0]}")"
+if havecmd realpath; then
+	this_dir="$(realpath "$this_dir")"
+fi
+cd "${this_dir}" || {
+	echo "Couldn't 'cd' to '$this_dir'" 1>&2
+	exit 1
+}
+
+main() {
+	while true; do
+		./update_from_hiyori ../checker_mal/cache
+		git add ./cache
+		git commit -m "cache updates" && git push
+		sleep 1m
+	done
+}
+
+# exit code of the main function is the exit code of the entire script
+main "$@" || exit $?
