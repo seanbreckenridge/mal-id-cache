@@ -45,10 +45,11 @@ cd "${this_dir}" || {
 
 main() {
 	while true; do
+		date
 		./update_from_hiyori "${1:-../checker_mal/cache}"
 		git add ./cache
 		git commit -m "cache updates" && git push
-		sleep 1m
+		sleep 5m
 	done
 }
 
