@@ -1,8 +1,12 @@
 # mal-id-cache
 
-This is a cache of anime, manga, person and character IDs on [MAL](https://myanimelist.net).
+This code doesn't run anymore, the anime and manga cache information are back filled from [Hiyori-API/checker_mal](https://github.com/Hiyori-API/checker_mal). Eventually (I assume mid-2021) that will replace this, and the cache files will be pushed to [HiyoriDB](https://github.com/Hiyori-API/HiyoriDB) instead.
 
-### NOTE: Since April 2nd 2020, MAL updated how characters/persons on their site are laid out making the People/Characters much more difficult to check for updates. The `people.json` and `character.json` files will remain unchanged for the forseeable future, they are up to date as of March 31st, 2020.
+---
+
+This is a cache of anime, and manga on [MAL](https://myanimelist.net).
+
+## NOTE: Since April 2nd 2020, MAL updated how characters/persons on their site are laid out making the People/Characters much more difficult to check for updates. The `people.json` and `character.json` files will remain unchanged for the forseeable future, they are up to date as of March 31st, 2020.
 
 [cache](./cache) includes anime, manga, person and character IDs.
 
