@@ -28,7 +28,7 @@ def backfill_type(_type: str, hiyori_cache_dir: Path):
         "nsfw": sorted(read_file(Path(str(base) + "nsfw.txt"))),
     }
     with target_file.open("w") as f:
-        json.dump(updated_cache, f)
+        json.dump(updated_cache, f, indent=4)
 
 
 def main():
