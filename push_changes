@@ -22,14 +22,12 @@ havecmd() {
 		printf '%s\n' "${ERRMSG}" 1>&2
 		return 1
 	fi
-} && export -f havecmd
-# exported the function, is defined in any other bash scripts this calls
+}
 
 # If the first argument isn't available on the users $PATH
 # print an error and the second argument, if given
 # set the -e flag; exits if any of the dependencies aren't satisfied
 set -e
-# Examples
 havecmd python
 havecmd git
 havecmd realpath
