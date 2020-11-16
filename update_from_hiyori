@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import json
+from typing import Iterator, Dict, List
+from pathlib import Path
+
+this_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+cache_dir = this_dir / "cache"
+
+
+def read_file(p: Path) -> Iterator[int]:
+    with p.open() as f:
+        contents_raw = f.read()
+
+    for line in contents_raw.splitlines():
+        lstr = line.strip()
+        if lstr:
+            yield int(lstr)
+
+
+def backfill_type(_type: str, hiyori_cache_dir: Path):
+    target_file: Path = cache_dir / f"{_type}_cache.json"
+    base: Path = hiyori_cache_dir / f"{_type}_"
+    updated_cache: Dict[str, List[int]] = {
+        "sfw": sorted(read_file(Path(str(base) + "sfw.txt"))),
+        "nsfw": sorted(read_file(Path(str(base) + "nsfw.txt"))),
+    }
+    with target_file.open("w") as f:
+        json.dump(updated_cache, f)
+
+
+def main():
+    if len(sys.argv) <= 1:
+        print("Must provide Hiyori txt cache dir as first argument")
+        raise SystemExit(1)
+    hiyori_cache_dir = Path(sys.argv[1]).absolute()
+    assert hiyori_cache_dir.exists()
+    assert (hiyori_cache_dir / "anime_sfw.txt").exists()
+    assert (hiyori_cache_dir / "anime_nsfw.txt").exists()
+    assert (hiyori_cache_dir / "manga_sfw.txt").exists()
+    assert (hiyori_cache_dir / "manga_nsfw.txt").exists()
+    backfill_type("anime", hiyori_cache_dir)
+    backfill_type("manga", hiyori_cache_dir)
+
+
+if __name__ == "__main__":
+    main()
