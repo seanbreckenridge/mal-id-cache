@@ -1,6 +1,6 @@
 # mal-id-cache
 
-This code doesn't run anymore, the anime and manga cache information is back filled from [Hiyori-API/checker_mal](https://github.com/Hiyori-API/checker_mal). I plan to keep this running for the forseeable future, though [HiyoriDB](https://github.com/Hiyori-API/HiyoriDB) will eventually be a nicer and more complete replacement.
+This code doesn't run anymore, the anime and manga cache information is back filled from [Hiyori-API/checker_mal](https://github.com/Hiyori-API/checker_mal). I plan to keep this updated for the forseeable future, though [HiyoriDB](https://github.com/Hiyori-API/HiyoriDB) will eventually be a nicer and more complete replacement.
 
 ---
 
