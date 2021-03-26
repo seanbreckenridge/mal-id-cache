@@ -11,13 +11,9 @@ cache_dir = this_dir / "cache"
 
 
 def read_file(p: Path) -> Iterator[int]:
-    with p.open() as f:
-        contents_raw = f.read()
-
-    for line in contents_raw.splitlines():
-        lstr = line.strip()
-        if lstr:
-            yield int(lstr)
+    for line in map(str.strip, p.read_text().splitlines()):
+        if line:
+            yield int(line)
 
 
 def backfill_type(_type: str, hiyori_cache_dir: Path):
@@ -34,13 +30,10 @@ def backfill_type(_type: str, hiyori_cache_dir: Path):
 def main():
     if len(sys.argv) <= 1:
         print("Must provide Hiyori txt cache dir as first argument")
-        raise SystemExit(1)
+        sys.exit(1)
     hiyori_cache_dir = Path(sys.argv[1]).absolute()
     assert hiyori_cache_dir.exists()
     assert (hiyori_cache_dir / "anime_sfw.txt").exists()
-    assert (hiyori_cache_dir / "anime_nsfw.txt").exists()
-    assert (hiyori_cache_dir / "manga_sfw.txt").exists()
-    assert (hiyori_cache_dir / "manga_nsfw.txt").exists()
     backfill_type("anime", hiyori_cache_dir)
     backfill_type("manga", hiyori_cache_dir)
 
