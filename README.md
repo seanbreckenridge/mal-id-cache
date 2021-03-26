@@ -62,5 +62,3 @@ This will be updated whenever a new entry is added.
 
 You can either clone this repo to your system and set up a script that `git pull`s periodically, or download the raw json files directly from [`cache`](./cache) (though that means you have no way of knowing when the file is updated)
 
-Check [the config file](./default_config.toml) for how often this checks different ranges of IDs.
-
