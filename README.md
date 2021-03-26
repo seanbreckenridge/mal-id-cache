@@ -1,44 +1,21 @@
 # mal-id-cache
 
-Anime and manga cache information is back filled from [Hiyori-API/checker_mal](https://github.com/Hiyori-API/checker_mal). I plan to keep this updated for the forseeable future, though [HiyoriDB](https://github.com/Hiyori-API/HiyoriDB) will eventually be a nicer and more complete replacement.
+Anime and manga cache information is back filled from [`Hiyori-API/checker_mal`](https://github.com/Hiyori-API/checker_mal). I plan to keep this updated for the foreseeable future, though [`HiyoriDB`](https://github.com/Hiyori-API/HiyoriDB) will eventually be a nicer and more complete replacement.
 
----
+This is a cache of anime and manga ids on [`MAL`](https://myanimelist.net).
 
-This is a cache of anime and manga ids on [MAL](https://myanimelist.net).
-
-Since April 2nd 2020, MAL updated how characters/persons on their site are laid out making the People/Characters much more difficult to check for updates. The `people.json` and `character.json` files will remain unchanged for the forseeable future, they are up to date as of March 31st, 2020.
+Since April 2nd 2020, MAL updated how characters/persons on their site are laid out making the People/Characters much more difficult to check for updates. The `people.json` and `character.json` files will remain unchanged, they are up to date as of March 31st, 2020.
 
 If you want a (somewhat) random character or person, you can request a random anime/manga using the cache files here, then pick a random character/staff member from that entry.
 
-[cache](./cache) includes anime, manga, person and character IDs.
+[cache](./cache) includes anime, and manga IDs
 
 The JSON files for anime/manga are structured like:
 
-```
+```json
 {
-    "sfw": [
-        1,
-        5,
-        ....
-
-    ],
-    "nsfw": [
-        188,
-        203,
-        ...
-    ]
-}
-```
-
-For person/character:
-
-```
-{
-    "ids": [
-        1,
-        2,
-        ...
-    ]
+  "sfw": [1, 5, "..."],
+  "nsfw": [188, 203, "..."]
 }
 ```
 
@@ -60,4 +37,4 @@ The most obvious application for this cache is to use the cache to choose an ent
 
 This will be updated whenever a new entry is added.
 
-You can either clone this repo to your system and set up a script that `git pull`s periodically, or download the raw json files directly from [`cache`](./cache) (though that means you have no way of knowing when the file is updated)
+You can either clone this repo to your system and set up a script that `git pull`s periodically, or download the raw JSON files directly from [`cache`](./cache) (though that means you have no way of knowing when the file is updated)
