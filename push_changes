@@ -26,7 +26,7 @@ havecmd realpath
 set +e
 
 declare this_dir
-this_dir="$(realpath "${BASH_SOURCE[0]}")"
+this_dir="$(realpath "$(dirname "${BASH_SOURCE[0]}")")"
 cd "${this_dir}" || {
 	echo "Couldn't 'cd' to '${this_dir}'" 1>&2
 	exit 1
