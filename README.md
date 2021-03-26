@@ -25,7 +25,7 @@ The JSON files for anime/manga are structured like:
     "nsfw": [
         188,
         203,
-        ...    
+        ...
     ]
 }
 ```
@@ -61,4 +61,3 @@ The most obvious application for this cache is to use the cache to choose an ent
 This will be updated whenever a new entry is added.
 
 You can either clone this repo to your system and set up a script that `git pull`s periodically, or download the raw json files directly from [`cache`](./cache) (though that means you have no way of knowing when the file is updated)
-
