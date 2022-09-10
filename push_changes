@@ -38,7 +38,7 @@ main() {
 		./update_from_hiyori "${1:-../checker_mal/cache}"
 		git add ./cache
 		git commit -m "cache updates" && git push
-		sleep 5m
+		sleep 90
 	done
 }
 
