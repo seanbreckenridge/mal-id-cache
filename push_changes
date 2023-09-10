@@ -20,7 +20,7 @@ havecmd() {
 }
 
 set -e
-havecmd python
+havecmd python3
 havecmd git
 havecmd realpath
 set +e
